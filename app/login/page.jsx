@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense } from "react"; 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -28,6 +29,7 @@ function LoginForm() {
     setMensagem("");
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password: senha,
     });
@@ -63,6 +65,11 @@ function LoginForm() {
 
     router.push(destino);
     router.refresh();
+      setMensagem(`Erro: ${error.message}`);
+    } else {
+      router.push(redirectUrl);
+      router.refresh(); 
+    }
     setCarregando(false);
   };
 
@@ -76,6 +83,11 @@ function LoginForm() {
       {mensagem && (
         <div className="p-4 rounded-lg mb-6 text-sm bg-red-100 text-red-700 border border-red-200 flex items-center gap-2">
           <span>⚠️</span> {mensagem}
+      <p className="text-sensus-muted mb-8">Acesse sua conta para agendar consultas.</p>
+
+      {mensagem && (
+        <div className="p-4 rounded-lg mb-6 text-sm bg-red-100 text-red-700">
+          {mensagem}
         </div>
       )}
 
@@ -89,6 +101,13 @@ function LoginForm() {
             placeholder="joao@universidade.edu.br"
             className="w-full border border-sensus-border rounded-lg px-4 py-3"
             required
+          <input 
+            type="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            placeholder="joao@universidade.edu.br" 
+            className="w-full border border-sensus-border rounded-lg px-4 py-3" 
+            required 
           />
         </div>
         <div>
@@ -105,6 +124,18 @@ function LoginForm() {
         <button
           type="submit"
           disabled={carregando}
+          <input 
+            type="password" 
+            value={senha} 
+            onChange={(e) => setSenha(e.target.value)} 
+            placeholder="••••••••" 
+            className="w-full border border-sensus-border rounded-lg px-4 py-3" 
+            required 
+          />
+        </div>
+        <button 
+          type="submit" 
+          disabled={carregando} 
           className="w-full bg-sensus-primary text-white rounded-full py-3 font-semibold hover:opacity-90 disabled:opacity-50"
         >
           {carregando ? "Entrando..." : "Entrar"}
@@ -116,6 +147,7 @@ function LoginForm() {
         <Link href="/cadastro" className="text-sensus-primary font-semibold">
           Cadastre-se
         </Link>
+        Não tem conta? <Link href="/cadastro" className="text-sensus-primary font-semibold">Cadastre-se</Link>
       </p>
     </div>
   );
@@ -127,4 +159,5 @@ export default function Login() {
       <LoginForm />
     </Suspense>
   );
+}
 }
