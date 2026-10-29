@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sensus-primary: #004E6E;
+  --color-sensus-secondary: #E6F0F3;
+  --color-sensus-accent: #00A3C4;
+  --color-sensus-text: #1A1A1A;
+  --color-sensus-muted: #6B7280;
+  --color-sensus-border: #D1D5DB;
+}
+
+body {
+  background-color: #F9FAFB;
+  color: var(--color-sensus-text);
+}
