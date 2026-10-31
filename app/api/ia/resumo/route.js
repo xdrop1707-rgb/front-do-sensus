@@ -1,8 +1,6 @@
-// app/api/ia/resumo/route.js
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
-// Inicializa a IA com a chave do .env.local
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(request) {
@@ -23,7 +21,7 @@ export async function POST(request) {
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-1.5-flash",
       contents: prompt,
     });
 

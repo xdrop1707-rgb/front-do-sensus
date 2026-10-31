@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sensus-primary: #004E6E;
-  --color-sensus-secondary: #E6F0F3;
-  --color-sensus-accent: #00A3C4;
-  --color-sensus-text: #1A1A1A;
-  --color-sensus-muted: #6B7280;
-  --color-sensus-border: #D1D5DB;
+  --color-sensus-primary: #004e6e;
+  --color-sensus-secondary: #e6f0f3;
+  --color-sensus-accent: #00a3c4;
+  --color-sensus-text: #1a1a1a;
+  --color-sensus-muted: #6b7280;
+  --color-sensus-border: #d1d5db;
+}
+
+/* 👇 NOVO: Rolagem suave e ajuste do topo 👇 */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Compensa a altura do header fixo */
 }
 
 body {
-  background-color: #F9FAFB;
+  background-color: #f9fafb;
   color: var(--color-sensus-text);
 }
