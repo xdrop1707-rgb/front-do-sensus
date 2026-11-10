@@ -1,10 +1,8 @@
 "use server";
-import { unstable_noStore as noStore } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
 
 export async function buscarTriagensPendentes() {
-  noStore();
-
   const supabase = await createClient();
 
   const { data: triagens, error } = await supabase
@@ -12,13 +10,9 @@ export async function buscarTriagensPendentes() {
     .select("*")
     .order("data_solicitacao", { ascending: false });
 
-  if (error) {
-    return { error: "Erro no banco: " + error.message };
-  }
-
-  if (!triagens || triagens.length === 0) {
+  if (error) return { error: "Erro no banco: " + error.message };
+  if (!triagens || triagens.length === 0)
     return { success: true, triagens: [] };
-  }
 
   const triagensFormatadas = [];
 

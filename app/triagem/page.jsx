@@ -32,6 +32,9 @@ export default function Triagem() {
       const formData = new FormData();
       formData.append("motivo", motivo);
 
+      // 👇 AQUI ESTÁ A LINHA QUE FALTAVA 👇
+      formData.append("prioridade", dadosIA.nivel || "normal");
+
       const resultado = await criarTriagem(formData);
 
       if (resultado.error) {

@@ -148,9 +148,18 @@ export default function Cadastro() {
               className="w-full border border-sensus-border rounded-lg px-4 py-3"
               required
               minLength={6}
-              onInvalid={(e) =>
-                e.target.setCustomValidity("Preencha este campo obrigatório.")
-              }
+              // 👇 MUDANÇA AQUI: Validação específica para a senha 👇
+              onInvalid={(e) => {
+                if (e.target.validity.tooShort) {
+                  e.target.setCustomValidity(
+                    "A senha deve ter no mínimo 6 caracteres.",
+                  );
+                } else {
+                  e.target.setCustomValidity(
+                    "Preencha este campo obrigatório.",
+                  );
+                }
+              }}
               onInput={(e) => e.target.setCustomValidity("")}
             />
           </div>
