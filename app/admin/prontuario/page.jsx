@@ -31,6 +31,15 @@ function ConteudoProntuario() {
   const [paciente, setPaciente] = useState(null);
   const [salvando, setSalvando] = useState(false);
 
+  // 👇 Novo estado para as mensagens de aviso na tela 👇
+  const [mensagem, setMensagem] = useState("");
+
+  // Função auxiliar para mostrar a mensagem e sumir depois de 3 segundos
+  const mostrarMensagem = (msg) => {
+    setMensagem(msg);
+    setTimeout(() => setMensagem(""), 4000);
+  };
+
   useEffect(() => {
     async function buscarDados() {
       if (!pacienteId) return;
@@ -95,47 +104,53 @@ function ConteudoProntuario() {
   }, [pacienteId]);
 
   const handleSalvar = async () => {
-  if (!consultaAtual) {
-    alert("Não há consulta agendada para este paciente. Agende uma consulta primeiro.");
-    return;
-  }
+    if (!consultaAtual) {
+      mostrarMensagem(
+        "Não há consulta agendada para este paciente. Agende uma consulta primeiro.",
+      );
+      return;
+    }
 
-  const textoLimpo = textoProntuario.replace(/<[^>]*>/g, "").trim();
-  if (!textoLimpo || textoLimpo.length < 10) {
-    alert("Escreva uma observação clínica válida antes de salvar.");
-    return;
-  }
+    const textoLimpo = textoProntuario.replace(/<[^>]*>/g, "").trim();
+    if (!textoLimpo || textoLimpo.length < 10) {
+      mostrarMensagem("Escreva uma observação clínica válida antes de salvar.");
+      return;
+    }
 
-  setSalvando(true);
+    setSalvando(true);
 
-  const resultado = await salvarProntuario({
-    id_consulta: consultaAtual.id,
-    prontuario: textoProntuario,
-    status_clinico: "Estável",
-    humor_predominante: "Positivo",
-    revisao_medicacao: false,
-    intervencoes: "Nenhuma",
-    plano_proximo: "Continuar acompanhamento",
-  });
+    const resultado = await salvarProntuario({
+      id_consulta: consultaAtual.id,
+      prontuario: textoProntuario,
+      status_clinico: "Estável",
+      humor_predominante: "Positivo",
+      revisao_medicacao: false,
+      intervencoes: "Nenhuma",
+      plano_proximo: "Continuar acompanhamento",
+    });
 
-  if (resultado.error) {
-    alert("Erro ao salvar no banco: " + resultado.error);
-  } else {
-    alert("Prontuário salvo com sucesso!");
-    setTextoProntuario("");
-  }
+    if (resultado.error) {
+      mostrarMensagem("Erro ao salvar no banco: " + resultado.error);
+    } else {
+      mostrarMensagem("Prontuário salvo com sucesso!");
+      setTextoProntuario("");
+    }
 
-  setSalvando(false);
+    setSalvando(false);
   };
 
   const handleEnviarFeedback = async () => {
     if (!assuntoFeedback || !mensagemFeedback) {
-      alert("Por favor, preencha o assunto e a mensagem antes de enviar.");
+      mostrarMensagem(
+        "Por favor, preencha o assunto e a mensagem antes de enviar.",
+      );
       return;
     }
 
     if (!consultaAtual) {
-      alert("Atenção: Salve o prontuário primeiro para vincular o feedback à consulta.");
+      mostrarMensagem(
+        "Atenção: Salve o prontuário primeiro para vincular o feedback à consulta.",
+      );
       return;
     }
 
@@ -147,18 +162,18 @@ function ConteudoProntuario() {
     });
 
     if (resultado.error) {
-      alert("Erro ao enviar feedback: " + resultado.error);
+      mostrarMensagem("Erro ao enviar feedback: " + resultado.error);
     } else {
-      alert("Feedback enviado com sucesso!");
+      mostrarMensagem("Feedback enviado com sucesso!");
       setAssuntoFeedback("");
       setMensagemFeedback("");
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 1500);
     }
   };
 
   const handleGerarResumo = async () => {
     if (!textoProntuario) {
-      alert("Escreva algo no prontuário primeiro para a IA resumir.");
+      mostrarMensagem("Escreva algo no prontuário primeiro para a IA resumir.");
       return;
     }
 
@@ -175,12 +190,12 @@ function ConteudoProntuario() {
       const data = await response.json();
 
       if (data.error) {
-        alert("Erro da IA: " + data.error);
+        mostrarMensagem("Erro da IA: " + data.error);
       } else {
         setResumoIA(data.resumo);
       }
     } catch (err) {
-      alert("Erro de conexão com a IA: " + err.message);
+      mostrarMensagem("Erro de conexão com a IA: " + err.message);
     } finally {
       setCarregandoIA(false);
     }
@@ -199,6 +214,19 @@ function ConteudoProntuario() {
 
   return (
     <div className="p-4 md:p-8 bg-[#E6F0F3] min-h-screen">
+      {/* 👇 AQUI APARECE A MENSAGEM VERMELHA NO TOPO 👇 */}
+      {mensagem && (
+        <div
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-xl shadow-lg text-sm font-medium transition-all ${
+            mensagem.includes("sucesso")
+              ? "bg-green-100 text-green-700 border border-green-200"
+              : "bg-red-100 text-red-700 border border-red-200"
+          }`}
+        >
+          {mensagem}
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-[#E6F0F3] rounded-full flex items-center justify-center text-2xl font-bold text-[#005C8A]">
@@ -219,7 +247,9 @@ function ConteudoProntuario() {
             <span className="px-4 py-2 bg-green-100 text-green-700 text-xs font-bold rounded-xl flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
               Consulta:{" "}
-              {new Date(consultaAtual.data_hora_consulta).toLocaleString("pt-BR")}
+              {new Date(consultaAtual.data_hora_consulta).toLocaleString(
+                "pt-BR",
+              )}
             </span>
           ) : (
             <span className="px-4 py-2 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-xl flex items-center gap-2">
@@ -236,8 +266,18 @@ function ConteudoProntuario() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
           <h2 className="text-lg font-bold text-[#004E6E] mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             Prontuário Clínico
           </h2>
@@ -260,8 +300,18 @@ function ConteudoProntuario() {
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
           <h2 className="text-lg font-bold text-[#004E6E] mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-[#00a3c4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <svg
+              className="w-5 h-5 text-[#00a3c4]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
             Assistente Clínico IA
           </h2>
@@ -284,14 +334,19 @@ function ConteudoProntuario() {
             <div className="bg-[#F9FAFB] border border-gray-100 rounded-2xl p-4 flex-1 flex flex-col justify-center min-h-[250px]">
               {resumoIA ? (
                 <div className="h-full">
-                  <h3 className="text-sm font-bold text-[#004E6E] mb-2">Resumo Gerado:</h3>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{resumoIA}</p>
+                  <h3 className="text-sm font-bold text-[#004E6E] mb-2">
+                    Resumo Gerado:
+                  </h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {resumoIA}
+                  </p>
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center">
                   <GraficoHumor />
                   <p className="text-xs text-gray-400 mt-4 text-center max-w-[200px]">
-                    Escreva no prontuário e clique no botão acima para a IA gerar um resumo.
+                    Escreva no prontuário e clique no botão acima para a IA
+                    gerar um resumo.
                   </p>
                 </div>
               )}
@@ -301,14 +356,26 @@ function ConteudoProntuario() {
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col">
           <h2 className="text-lg font-bold text-[#004E6E] mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
             </svg>
             Feedback / Tarefas
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Assunto</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Assunto
+              </label>
               <input
                 type="text"
                 value={assuntoFeedback}
@@ -318,7 +385,9 @@ function ConteudoProntuario() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mensagem</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Mensagem
+              </label>
               <textarea
                 value={mensagemFeedback}
                 onChange={(e) => setMensagemFeedback(e.target.value)}
@@ -336,21 +405,40 @@ function ConteudoProntuario() {
 
           <div className="mt-6 border-t border-gray-100 pt-5">
             <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-4 h-4 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               Comunicações Anteriores
             </h3>
             {comunicacoes.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">Nenhuma comunicação encontrada.</p>
+              <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">
+                Nenhuma comunicação encontrada.
+              </p>
             ) : (
               <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
                 {comunicacoes.map((com) => (
-                  <div key={com.id} className="bg-[#F9FAFB] p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                  <div
+                    key={com.id}
+                    className="bg-[#F9FAFB] p-3 rounded-xl border border-gray-100 flex justify-between items-center"
+                  >
                     <div>
-                      <p className="text-sm font-semibold text-gray-800">{com.assunto}</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {com.assunto}
+                      </p>
                       <p className="text-xs text-gray-500">
-                        {com.data_envio ? new Date(com.data_envio).toLocaleDateString("pt-BR") : "Data indisponível"}
+                        {com.data_envio
+                          ? new Date(com.data_envio).toLocaleDateString("pt-BR")
+                          : "Data indisponível"}
                       </p>
                     </div>
                     <span className="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded-full font-bold uppercase">
@@ -373,7 +461,9 @@ export default function TelaProntuario() {
       fallback={
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#E6F0F3]">
           <div className="w-12 h-12 border-4 border-[#004E6E] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-[#004E6E] mt-4 font-semibold">Carregando prontuário...</p>
+          <p className="text-[#004E6E] mt-4 font-semibold">
+            Carregando prontuário...
+          </p>
         </div>
       }
     >

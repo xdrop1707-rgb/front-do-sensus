@@ -15,21 +15,29 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function carregarDashboard() {
-      // Busca total de pacientes
+      // 1. Busca pacientes ativos
       const { data: pacientesData } = await supabase
         .from("vw_pacientes_ativos")
         .select("id");
 
-      // Busca triagens pendentes
+      // 2. Busca triagens pendentes reais (contando todas as que estão na tabela)
       const { data: triagensData } = await supabase
         .from("triagens")
+        .select("id");
+
+      // 3. Busca as consultas de HOJE
+      const hoje = new Date().toISOString().split("T")[0];
+      const { data: consultasHoje } = await supabase
+        .from("consultas")
         .select("id")
-        .eq("status", "pendente");
+        .gte("data_hora_consulta", `${hoje}T00:00:00`)
+        .lte("data_hora_consulta", `${hoje}T23:59:59`);
 
       setDados({
         totalPacientes: pacientesData?.length || 0,
+        // 👇 Aqui ele conta o tamanho do array de triagens do banco 👇
         triagensPendentes: triagensData?.length || 0,
-        sessoesHoje: 1, // Valor fixo para não quebrar
+        sessoesHoje: consultasHoje?.length || 0,
       });
 
       setCarregando(false);
@@ -60,6 +68,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+        {/* Card Pacientes */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
           <div>
             <p className="text-gray-500 font-medium text-sm mb-1">
@@ -86,11 +95,13 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Card Triagens */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
           <div>
             <p className="text-gray-500 font-medium text-sm mb-1">
               Triagens Pendentes
             </p>
+            {/* 👇 Exibindo o número real 👇 */}
             <h2 className="text-4xl font-bold text-yellow-600">
               {dados.triagensPendentes}
             </h2>
@@ -112,6 +123,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Card Sessões */}
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
           <div>
             <p className="text-gray-500 font-medium text-sm mb-1">
